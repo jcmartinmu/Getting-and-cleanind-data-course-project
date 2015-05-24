@@ -42,12 +42,21 @@ test_data=cbind(y_test,subject_test,x_test)
 Data=rbind(training_data,test_data)
 
 col_Names=colnames(Data)
+
+## Info_Vector generates the desired information and then stores it into the col_Names vector
+
 info_Vector = (grepl("Activity..",col_Names) | grepl("subject..",col_Names) | grepl("-mean..",col_Names) & !grepl("-meanFreq..",col_Names) & !grepl("mean..-",col_Names) | grepl("-std..",col_Names) & !grepl("-std()..-",col_Names))
+## To avoid "noise" or NA values in Data, lets "refresh" the Data with only information different than NA
 Data=Data[info_Vector==TRUE]
+
+## Lets "convert" the numbers from activity id to activity labels to get more information about the activity that was measured
 Data=merge(Data,activity_labels,by='Activity_id',all.x=TRUE)
+
 
 col_Names=colnames(Data)
 
+## Data column names need to converted to logical words
+## This "loop" does the transformation on each name of each column
 for (i in 1:length(col_Names)) 
 {
   col_Names[i] = gsub("\\()","",col_Names[i])
@@ -68,8 +77,10 @@ colnames(Data) = col_Names
 
 Data_no_activity_labels=Data[,names(Data)!='Activity_labels']
 
+## The tidy_Data is going to be built from like this:
 tidy_Data=aggregate(Data_no_activity_labels[,names(Data_no_activity_labels)!= c('Activity_id','subject_id')],by=list(Activity_id=Data_no_activity_labels$Activity_id,subject_id=Data_no_activity_labels$subject_id),mean)
 
 tidy_Data=merge(tidy_Data,activity_labels,by='Activity_id',all.x=TRUE)
 
+## Finally, the command to generate a "txt" file that has the tidy Data
 write.table(tidy_Data,'./tidyData.txt',row.names=TRUE,sep='\t')
